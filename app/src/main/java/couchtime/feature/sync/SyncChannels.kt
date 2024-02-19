@@ -6,7 +6,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.media.tv.TvContract
 import android.net.Uri
-import couchtime.PlayerSession
 import couchtime.core.m3u.PlaylistChannelData
 import couchtime.core.m3u.parsePlaylist
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +17,7 @@ internal class SyncChannels(
     private val context: Context,
 ) {
 
-    suspend operator fun invoke() {
+    suspend operator fun invoke(inputId: String) {
         Timber.d("Sync channels")
 
         withContext(Dispatchers.IO) {
@@ -46,7 +45,7 @@ internal class SyncChannels(
                     channels
                         .map { channelData ->
                             ContentProviderOperation.newInsert(TvContract.Channels.CONTENT_URI)
-                                .withValues(channelData.toContentValues(context))
+                                .withValues(channelData.toContentValues(inputId))
                                 .build()
                         }
                         .chunked(100)
@@ -84,10 +83,10 @@ internal class SyncChannels(
 
 }
 
-private fun PlaylistChannelData.toContentValues(context: Context): ContentValues =
+private fun PlaylistChannelData.toContentValues(inputId: String): ContentValues =
     ContentValues()
         .apply {
-            put(TvContract.Channels.COLUMN_INPUT_ID, PlayerSession.createInputId(context))
+            put(TvContract.Channels.COLUMN_INPUT_ID, inputId)
             put(TvContract.Channels.COLUMN_TYPE, TvContract.Channels.TYPE_OTHER)
             put(TvContract.Channels.COLUMN_SERVICE_TYPE, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)
             put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID, id.toString())

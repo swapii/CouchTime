@@ -1,8 +1,6 @@
 package couchtime
 
-import android.content.ComponentName
 import android.content.Context
-import android.media.tv.TvContract
 import android.media.tv.TvInputService.Session
 import android.net.Uri
 import android.view.Surface
@@ -32,18 +30,6 @@ class PlayerSession(
 
     override fun onRelease() {
         Timber.d("Release")
-    }
-
-    companion object {
-
-        fun createInputId(context: Context): String =
-            TvContract.buildInputId(
-                ComponentName(
-                    /* pkg = */ context,
-                    /* cls = */ PlayerSession::class.java,
-                ),
-            )
-
     }
 
 }
