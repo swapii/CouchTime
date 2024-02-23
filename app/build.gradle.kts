@@ -45,6 +45,8 @@ dependencies {
     implementation(platform(libs.android.x.compose.bom))
     implementation(libs.android.x.compose.material3)
 
+    implementation(libs.store)
+
     implementation(libs.dagger.hilt.android)
     ksp(libs.dagger.hilt.compiler)
 

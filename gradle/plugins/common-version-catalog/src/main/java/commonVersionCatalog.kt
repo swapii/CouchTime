@@ -30,6 +30,10 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
 
         }
 
+        group("store", "5.0.0-beta02") {
+            library("org.mobilenativefoundation.store:store5") { version(version) }
+        }
+
         group("dagger", "2.50") {
             plugin("hilt.android", "com.google.dagger.hilt.android", version)
             library("hilt.compiler", "com.google.dagger:hilt-compiler") { version(version) }
