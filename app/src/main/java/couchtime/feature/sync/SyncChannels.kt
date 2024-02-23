@@ -8,8 +8,9 @@ import android.media.tv.TvContract
 import android.net.Uri
 import couchtime.core.m3u.PlaylistChannelData
 import timber.log.Timber
+import javax.inject.Inject
 
-internal class SyncChannels(
+internal class SyncChannels @Inject constructor(
     private val context: Context,
     private val getPlaylistChannels: GetPlaylistChannels,
 ) {

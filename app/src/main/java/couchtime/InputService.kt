@@ -1,10 +1,17 @@
 package couchtime
 
 import android.media.tv.TvInputService
-import couchtime.feature.sync.GetPlaylistChannels
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
+import javax.inject.Provider
 
+@AndroidEntryPoint
 class InputService : TvInputService() {
+
+    @Inject
+    @Suppress("ProtectedInFinal")
+    protected lateinit var playerSession: Provider<PlayerSession>
 
     init {
         Timber.d("init")
@@ -12,10 +19,7 @@ class InputService : TvInputService() {
 
     override fun onCreateSession(inputId: String): Session {
         Timber.d("Create session for inputId [$inputId]")
-        return PlayerSession(
-            context = this,
-            getPlaylistChannels = GetPlaylistChannels(this),
-        )
+        return playerSession.get()
     }
 
 }

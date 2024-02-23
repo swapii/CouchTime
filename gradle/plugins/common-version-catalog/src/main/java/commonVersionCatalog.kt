@@ -30,6 +30,14 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
 
         }
 
+        group("dagger", "2.50") {
+            plugin("hilt.android", "com.google.dagger.hilt.android", version)
+            library("hilt.compiler", "com.google.dagger:hilt-compiler") { version(version) }
+            library("hilt.android", "com.google.dagger:hilt-android") { version(version) }
+        }
+
+        plugin("ksp", "com.google.devtools.ksp", "1.9.22-1.0.17")
+
         group("kotlin", "1.9.22") {
             plugin("android", "org.jetbrains.kotlin.android", version)
         }

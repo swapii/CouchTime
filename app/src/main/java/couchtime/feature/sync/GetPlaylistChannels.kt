@@ -7,8 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import javax.inject.Inject
 
-class GetPlaylistChannels(
+class GetPlaylistChannels @Inject constructor(
     private val context: Context,
 ) {
 

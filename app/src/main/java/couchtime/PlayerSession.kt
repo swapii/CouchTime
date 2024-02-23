@@ -18,8 +18,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
+import javax.inject.Inject
 
-class PlayerSession(
+class PlayerSession @Inject constructor(
     private val context: Context,
     private val getPlaylistChannels: GetPlaylistChannels,
 ) : Session(context) {
