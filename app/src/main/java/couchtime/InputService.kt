@@ -1,7 +1,7 @@
 package couchtime
 
 import android.media.tv.TvInputService
-import couchtime.PlayerSession
+import couchtime.feature.sync.GetPlaylistChannels
 import timber.log.Timber
 
 class InputService : TvInputService() {
@@ -12,7 +12,10 @@ class InputService : TvInputService() {
 
     override fun onCreateSession(inputId: String): Session {
         Timber.d("Create session for inputId [$inputId]")
-        return PlayerSession(context = this)
+        return PlayerSession(
+            context = this,
+            getPlaylistChannels = GetPlaylistChannels(this),
+        )
     }
 
 }

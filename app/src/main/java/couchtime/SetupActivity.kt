@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import couchtime.feature.sync.GetPlaylistChannels
 import couchtime.feature.sync.SyncChannels
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -23,6 +24,7 @@ class SetupActivity : ComponentActivity() {
             by lazy {
                 SyncChannels(
                     context = applicationContext,
+                    getPlaylistChannels = GetPlaylistChannels(applicationContext),
                 )
             }
 

@@ -19,6 +19,8 @@ dependencyResolutionManagement {
             version("android.x.compose.compiler", "1.5.9")
             library("android.x.compose.bom", "androidx.compose", "compose-bom").version("2024.02.00")
             library("android.x.compose.material3", "androidx.compose.material3", "material3").withoutVersion()
+            library("android.x.media3.exoplayer", "androidx.media3", "media3-exoplayer").version("1.2.1")
+            library("android.x.media3.exoplayer.hls", "androidx.media3", "media3-exoplayer-hls").version("1.2.1")
         }
     }
 }

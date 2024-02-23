@@ -37,6 +37,8 @@ android {
 dependencies {
 
     implementation(libs.android.x.activity.compose)
+    implementation(libs.android.x.media3.exoplayer)
+    implementation(libs.android.x.media3.exoplayer.hls)
 
     implementation(platform(libs.android.x.compose.bom))
     implementation(libs.android.x.compose.material3)

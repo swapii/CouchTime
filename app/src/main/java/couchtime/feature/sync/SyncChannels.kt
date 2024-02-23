@@ -7,75 +7,59 @@ import android.content.Context
 import android.media.tv.TvContract
 import android.net.Uri
 import couchtime.core.m3u.PlaylistChannelData
-import couchtime.core.m3u.parsePlaylist
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.File
 
 internal class SyncChannels(
     private val context: Context,
+    private val getPlaylistChannels: GetPlaylistChannels,
 ) {
 
     suspend operator fun invoke(inputId: String) {
         Timber.d("Sync channels")
 
-        withContext(Dispatchers.IO) {
+        val contentResolver = context.contentResolver
 
-            val applicationId = context.packageName
+        val count: Int =
+            contentResolver.count(TvContract.Channels.CONTENT_URI)
 
-            File("/data/local/tmp/$applicationId.playlist")
-                .bufferedReader()
-                .use { reader ->
+        if (count > 0) {
+            Timber.d("Deleting $count existing rows")
+            contentResolver.delete(TvContract.Channels.CONTENT_URI, null, null)
+        }
 
-                    val channels: Sequence<PlaylistChannelData> = reader.lineSequence().parsePlaylist()
+        var newElementsCount = 0
 
-                    val contentResolver = context.contentResolver
-
-                    val count: Int =
-                        contentResolver.count(TvContract.Channels.CONTENT_URI)
-
-                    if (count > 0) {
-                        Timber.d("Deleting $count existing rows")
-                        contentResolver.delete(TvContract.Channels.CONTENT_URI, null, null)
-                    }
-
-                    var newElementsCount = 0
-
-                    channels
-                        .map { channelData ->
-                            ContentProviderOperation.newInsert(TvContract.Channels.CONTENT_URI)
-                                .withValues(channelData.toContentValues(inputId))
-                                .build()
-                        }
-                        .chunked(100)
-                        .forEach {
-                            newElementsCount += it.size
-                            if (newElementsCount % 500 == 0) {
-                                Timber.v("Processed $newElementsCount")
-                            }
-                            contentResolver.applyBatch(TvContract.AUTHORITY, ArrayList(it))
-                                .mapNotNull { it.exception }
-                                .forEach {
-                                    val message = "Error inserting channel data"
-                                    val exception = IllegalStateException(message, it)
-                                    Timber.e(message, exception)
-                                    throw exception
-                                }
-                        }
-
-                    Timber.v("$newElementsCount rows inserted")
-
-                    val newCount = contentResolver.count(TvContract.Channels.CONTENT_URI)
-
-                    if (newCount != newElementsCount) {
-                        val message = "Content resolver contains $newCount rows but should be $newElementsCount"
-                        val e = IllegalStateException(message)
-                        Timber.e(message, e)
-                        throw e
-                    }
-
+        getPlaylistChannels()
+            .map { channelData ->
+                ContentProviderOperation.newInsert(TvContract.Channels.CONTENT_URI)
+                    .withValues(channelData.toContentValues(inputId))
+                    .build()
+            }
+            .chunked(100)
+            .forEach {
+                newElementsCount += it.size
+                if (newElementsCount % 500 == 0) {
+                    Timber.v("Processed $newElementsCount")
                 }
+                contentResolver.applyBatch(TvContract.AUTHORITY, ArrayList(it))
+                    .mapNotNull { it.exception }
+                    .forEach {
+                        val message = "Error inserting channel data"
+                        val exception = IllegalStateException(message, it)
+                        Timber.e(exception, message)
+                        throw exception
+                    }
+            }
+
+        Timber.v("$newElementsCount rows inserted")
+
+        val newCount = contentResolver.count(TvContract.Channels.CONTENT_URI)
+
+        if (newCount != newElementsCount) {
+            val message = "Content resolver contains $newCount rows but should be $newElementsCount"
+            val e = IllegalStateException(message)
+            Timber.e(e, message)
+            throw e
         }
 
         Timber.d("Channels synced")
