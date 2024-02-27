@@ -38,6 +38,8 @@ android {
 
 dependencies {
 
+    implementation(projects.common.m3u)
+
     implementation(libs.android.x.activity.compose)
     implementation(libs.android.x.media3.exoplayer)
     implementation(libs.android.x.media3.exoplayer.hls)

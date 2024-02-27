@@ -48,6 +48,7 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
         plugin("ksp", "com.google.devtools.ksp", "1.9.22-1.0.17")
 
         group("kotlin", "1.9.22") {
+            plugin("jvm", "org.jetbrains.kotlin.jvm", version)
             plugin("android", "org.jetbrains.kotlin.android", version)
         }
 

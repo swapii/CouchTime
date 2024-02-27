@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
 
     repositories {
@@ -27,4 +29,8 @@ dependencyResolutionManagement {
 
 }
 
-include(":app")
+include(
+    ":app",
+    ":common:m3u",
+    ":tool:m3u-to-csv",
+)

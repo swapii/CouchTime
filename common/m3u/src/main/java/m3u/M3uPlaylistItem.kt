@@ -1,4 +1,4 @@
-package couchtime.core.m3u
+package m3u
 
 data class M3uPlaylistItem(
     val extInf: ExtInf,
