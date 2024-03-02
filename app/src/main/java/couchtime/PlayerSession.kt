@@ -90,7 +90,9 @@ class PlayerSession @Inject constructor(
             channel
                 .collectLatest { channel: TvContractChannelAddress? ->
                     withContext(Dispatchers.Main.immediate) {
+                        player.stop()
                         player.clearMediaItems()
+                        notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING)
                         if (channel != null) {
                             val mediaItem = mediaItemsStore.get(channel)
                             try {
