@@ -1,4 +1,4 @@
 plugins {
     java
-    alias(libs.plugins.kotlin.jvm)
+    plugin(libs.plugins.kotlin.jvm)
 }

@@ -13,5 +13,5 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation("com.github.swapii.gvcs:gvcs-gradle-plugin:d6ab93aa")
+    implementation("com.github.swapii.gvcs:gvcs-gradle-plugin:603230b9")
 }

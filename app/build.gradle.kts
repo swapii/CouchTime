@@ -1,8 +1,8 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.dagger.hilt.android)
-    alias(libs.plugins.ksp)
+    plugin(libs.plugins.android.application)
+    plugin(libs.plugins.kotlin.android)
+    plugin(libs.plugins.dagger.hilt.android)
+    plugin(libs.plugins.ksp)
 }
 
 android {

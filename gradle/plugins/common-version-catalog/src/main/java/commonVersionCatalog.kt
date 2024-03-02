@@ -9,7 +9,9 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
 
         group("android") {
 
-            plugin("application", "com.android.application", "8.2.2")
+            val pluginVersion = "8.3.0"
+            plugin("application", "com.android.application").version(pluginVersion)
+            plugin("library", "com.android.library").version(pluginVersion)
 
             group("x") {
 
@@ -40,16 +42,16 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
         }
 
         group("dagger", "2.50") {
-            plugin("hilt.android", "com.google.dagger.hilt.android", version)
+            plugin("hilt.android", "com.google.dagger.hilt.android").version(version)
             library("hilt.compiler", "com.google.dagger:hilt-compiler") { version(version) }
             library("hilt.android", "com.google.dagger:hilt-android") { version(version) }
         }
 
-        plugin("ksp", "com.google.devtools.ksp", "1.9.22-1.0.17")
+        plugin("ksp", "com.google.devtools.ksp").version("1.9.22-1.0.17")
 
         group("kotlin", "1.9.22") {
-            plugin("jvm", "org.jetbrains.kotlin.jvm", version)
-            plugin("android", "org.jetbrains.kotlin.android", version)
+            plugin("jvm", "org.jetbrains.kotlin.jvm").version(version)
+            plugin("android", "org.jetbrains.kotlin.android").version(version)
         }
 
         library("retrosheet", "com.github.theapache64:retrosheet:2.0.1")
