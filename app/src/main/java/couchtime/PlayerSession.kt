@@ -90,9 +90,8 @@ class PlayerSession @Inject constructor(
             channel
                 .collectLatest { channel: TvContractChannelAddress? ->
                     withContext(Dispatchers.Main.immediate) {
-                        if (channel == null) {
-                            player.stop()
-                        } else {
+                        player.clearMediaItems()
+                        if (channel != null) {
                             val mediaItem = mediaItemsStore.get(channel)
                             try {
                                 player.setMediaItem(mediaItem)
