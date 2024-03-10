@@ -37,41 +37,20 @@ class PlayerSession @Inject constructor(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val channels: Store<ChannelId, Channel> =
-        StoreBuilder
-            .from(
-                fetcher = Fetcher.of { id: ChannelId ->
-                    localChannelsSource.getChannel(id)
-                },
-            )
-            .cachePolicy(
-                MemoryPolicy.builder<ChannelId, Channel>()
-                    .build()
-            )
-            .scope(coroutineScope)
-            .build()
-
-    private val channelIds: Store<TvContractChannelAddress, ChannelId> =
-        StoreBuilder.from(
-            Fetcher.of { channelAddress: TvContractChannelAddress ->
-                tvContractChannelsSource.getChannelInternalProviderId(channelAddress).asChannelId()
-            }
-        )
-            .cachePolicy(
-                MemoryPolicy.builder<TvContractChannelAddress, ChannelId>()
-                    .build()
-            )
-            .scope(coroutineScope)
-            .build()
-
     private val mediaItemsStore: Store<TvContractChannelAddress, MediaItem> =
         StoreBuilder
             .from(
                 fetcher = Fetcher.of { channelAddress: TvContractChannelAddress ->
-                    val channelId: ChannelId = channelIds.get(channelAddress)
-                    channels.get(channelId)
-                        .let {
-                            MediaItem.fromUri(it.address)
+                    channelAddress
+                        .let { address: TvContractChannelAddress ->
+                            tvContractChannelsSource.getChannelInternalProviderId(address)
+                                .asChannelId()
+                        }
+                        .let { id: ChannelId ->
+                            localChannelsSource.getChannel(id)
+                        }
+                        .let { channel: Channel ->
+                            MediaItem.fromUri(channel.address)
                         }
                 }
             )
