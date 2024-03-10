@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Singleton
 
 @Module
@@ -24,5 +25,9 @@ class SettingsCoreModule {
             },
             serializer = SettingsSerializer,
         )
+
+    @Provides
+    fun settings(settingsDataStore: DataStore<Settings>): Flow<Settings> =
+        settingsDataStore.data
 
 }

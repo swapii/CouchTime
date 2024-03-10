@@ -1,20 +1,26 @@
 package couchtime.core.googlesheet.data
 
+import couchtime.Settings
 import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
+import couchtime.core.googlesheet.domain.model.asGoogleSheetAddress
 import couchtime.core.googlesheet.domain.source.GoogleSheetChannelsSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Inject
-import javax.inject.Provider
 
 internal class GoogleSheetChannelsSourceImpl @Inject constructor(
-    private val googleSheetSourceProvider: Provider<GoogleSheetSource?>,
+    private val settings: Flow<Settings>,
 ) : GoogleSheetChannelsSource {
 
     override suspend fun getAll(): List<GoogleSheetChannel> {
         Timber.d("Get playlist channels")
 
         val googleSheetSource: GoogleSheetSource =
-            googleSheetSourceProvider.get()
+            settings.first()
+                .googleSheetAddress
+                ?.asGoogleSheetAddress()
+                ?.source()
                 ?: return emptyList()
 
         return googleSheetSource.getChannels()
