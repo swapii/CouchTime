@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,77 +61,17 @@ internal class SetupActivity : ComponentActivity() {
                     .padding(32.dp)
             ) {
 
-                Row {
+                SettingsField(
+                    label = "Google Sheet",
+                    getValue = { googleSheetAddress },
+                    setValue = { setGoogleSheetAddress(it) },
+                )
 
-                    var isEditingNow: Boolean
-                            by remember {
-                                mutableStateOf(false)
-                            }
-
-                    val address: String?
-                            by remember {
-                                settingsStore.data.map { it.googleSheetAddress }
-                                    .stateIn(lifecycleScope, SharingStarted.Eagerly, null)
-                            }.collectAsState()
-
-                    Text(
-                        text = address ?: "",
-                    )
-
-                    Button(
-                        onClick = {
-                            Timber.i("Edit Google Sheet address button clicked")
-                            isEditingNow = !isEditingNow
-                        },
-                    ) {
-                        Text(text = "Edit")
-                    }
-
-                    if (isEditingNow) {
-                        Dialog(
-                            onDismissRequest = {
-                                isEditingNow = false
-                            },
-                        ) {
-
-                            var addressEditState: String?
-                                    by remember {
-                                        mutableStateOf(address)
-                                    }
-
-                            Column {
-
-                                Text(text = "EDIT DIALOG")
-
-                                TextField(
-                                    value = addressEditState ?: "",
-                                    onValueChange = {
-                                        addressEditState = it.takeIf { it.isNotBlank() }
-                                    },
-                                )
-
-                                Button(
-                                    onClick = {
-                                        Timber.i("Save Google Sheet address button clicked")
-                                        lifecycleScope.launch {
-                                            settingsStore.updateData {
-                                                Settings.newBuilder(it)
-                                                    .setGoogleSheetAddress(addressEditState)
-                                                    .build()
-                                            }
-                                            isEditingNow = false
-                                        }
-                                    },
-                                ) {
-                                    Text(text = "Save")
-                                }
-
-                            }
-
-                        }
-                    }
-
-                }
+                SettingsField(
+                    label = "EPG",
+                    getValue = { epgAddress },
+                    setValue = { setEpgAddress(it) },
+                )
 
                 Button(
                     onClick = {
@@ -156,6 +97,91 @@ internal class SetupActivity : ComponentActivity() {
             }
         }
 
+    }
+
+    @Composable
+    private fun SettingsField(
+        label: String,
+        getValue: Settings.() -> String,
+        setValue: Settings.Builder.(value: String) -> Unit,
+    ) {
+        Row {
+
+            var isEditingNow: Boolean
+                    by remember {
+                        mutableStateOf(false)
+                    }
+
+            val address: String?
+                    by remember {
+                        settingsStore.data.map { it.getValue() }
+                            .stateIn(lifecycleScope, SharingStarted.Eagerly, null)
+                    }.collectAsState()
+
+            Text(text = label)
+
+            Text(
+                text = address ?: "",
+            )
+
+            Button(
+                onClick = {
+                    Timber.i("Edit $label button clicked")
+                    isEditingNow = !isEditingNow
+                },
+            ) {
+                Text(text = "Edit")
+            }
+
+            if (!isEditingNow) {
+                return@Row
+            }
+
+            Dialog(
+                onDismissRequest = {
+                    isEditingNow = false
+                },
+            ) {
+
+                var addressEditState: String?
+                        by remember {
+                            mutableStateOf(address)
+                        }
+
+                Column {
+
+                    Text(text = "EDIT DIALOG")
+
+                    TextField(
+                        value = addressEditState ?: "",
+                        onValueChange = {
+                            addressEditState = it.takeIf { it.isNotBlank() }
+                        },
+                    )
+
+                    Button(
+                        onClick = {
+                            Timber.i("Save Google Sheet address button clicked")
+                            lifecycleScope.launch {
+                                settingsStore.updateData {
+                                    Settings.newBuilder(it)
+                                        .apply {
+                                            setValue(addressEditState.toString())
+                                        }
+                                        .build()
+                                }
+                                isEditingNow = false
+                            }
+                        },
+                    ) {
+                        Text(text = "Save")
+                    }
+
+                }
+
+            }
+
+        }
     }
 
 }

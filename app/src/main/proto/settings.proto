@@ -5,4 +5,5 @@ option java_multiple_files = true;
 
 message Settings {
   string google_sheet_address = 1;
+  string epg_address = 2;
 }
