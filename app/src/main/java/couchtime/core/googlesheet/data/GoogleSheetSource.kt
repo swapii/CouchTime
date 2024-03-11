@@ -57,7 +57,9 @@ inline fun <reified T> GoogleSheetAddress.source(): T =
 fun <T> GoogleSheetAddress.source(clazz: Class<T>): T {
 
     val url: HttpUrl =
-        this.value.toString().toHttpUrl()
+        this.value.toString()
+            .removeSuffix("edit?usp=sharing")
+            .toHttpUrl()
 
     val retrofit = Retrofit.Builder()
         .baseUrl(url)
