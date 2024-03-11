@@ -3,15 +3,19 @@ package couchtime.core.googlesheet.data
 import androidx.core.net.toUri
 import com.github.theapache64.retrosheet.RetrosheetInterceptor
 import com.github.theapache64.retrosheet.annotations.Read
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import couchtime.core.googlesheet.domain.model.GoogleSheetAddress
 import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
 import couchtime.core.googlesheet.domain.model.GoogleSheetChannelDisplayNumber
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import retrofit2.Converter
 import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 
 interface GoogleSheetSource {
@@ -22,11 +26,21 @@ interface GoogleSheetSource {
 
 }
 
+@Serializable
 data class Channel(
+
+    @SerialName("id")
     val id: String,
+
+    @SerialName("number")
     val number: String,
+
+    @SerialName("name")
     val name: String,
+
+    @SerialName("stream")
     val stream: String,
+
 )
 
 internal fun Channel.toGoogleSheetChannel(): GoogleSheetChannel =
@@ -42,29 +56,38 @@ inline fun <reified T> GoogleSheetAddress.source(): T =
 
 fun <T> GoogleSheetAddress.source(clazz: Class<T>): T {
 
-    val retrosheetInterceptor =
-        RetrosheetInterceptor.Builder()
-            .setLogging(false)
-            .addSheet(
-                "Channels",
-                "id", "number", "name", "stream",
-            )
-            .build()
-
-    val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(retrosheetInterceptor)
-        .build()
-
-    val moshi: Moshi =
-        Moshi.Builder()
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
+    val url: HttpUrl =
+        this.value.toString().toHttpUrl()
 
     val retrofit = Retrofit.Builder()
-        .baseUrl(value.toString().toHttpUrl())
+        .baseUrl(url)
         .client(okHttpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .addConverterFactory(jsonConverterFactory)
         .build()
 
     return retrofit.create(clazz)
 }
+
+@Suppress("JSON_FORMAT_REDUNDANT")
+private val jsonConverterFactory: Converter.Factory
+        by lazy {
+            Json {
+                isLenient = true
+            }.asConverterFactory("application/json".toMediaType())
+        }
+
+private val okHttpClient: OkHttpClient
+        by lazy {
+            val retrosheetInterceptor =
+                RetrosheetInterceptor.Builder()
+                    .setLogging(false)
+                    .addSheet(
+                        "Channels",
+                        "id", "number", "name", "stream",
+                    )
+                    .build()
+
+            OkHttpClient.Builder()
+                .addInterceptor(retrosheetInterceptor)
+                .build()
+        }

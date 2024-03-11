@@ -52,17 +52,19 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
         group("kotlin", "1.9.22") {
             plugin("jvm", "org.jetbrains.kotlin.jvm").version(version)
             plugin("android", "org.jetbrains.kotlin.android").version(version)
+            plugin("serialization", "org.jetbrains.kotlin.plugin.serialization").version(version)
             plugin("ksp", "com.google.devtools.ksp").version("$version-1.0.17")
+            group("x") {
+                group("serialization", "1.6.3") {
+                    library("json", "org.jetbrains.kotlinx:kotlinx-serialization-json") { version(version) }
+                }
+            }
         }
 
         library("retrosheet", "com.github.theapache64:retrosheet:2.0.1")
 
         group("retrofit", "2.9.0") {
-            library("converter.moshi", "com.squareup.retrofit2:converter-moshi") { version(version) }
-        }
-
-        group("moshi", "1.15.1") {
-            library("kotlin", "com.squareup.moshi:moshi-kotlin") { version(version) }
+            library("converter.kotlinx.serialization", "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
         }
 
         library("okhttp", "com.squareup.okhttp3:okhttp:4.12.0")

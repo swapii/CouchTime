@@ -6,6 +6,7 @@ plugins {
     plugin(libs.plugins.android.application)
     plugin(libs.plugins.kotlin.ksp)
     plugin(libs.plugins.kotlin.android)
+    plugin(libs.plugins.kotlin.serialization)
     plugin(libs.plugins.dagger.hilt.android)
     plugin(libs.plugins.protobuf)
 }
@@ -77,9 +78,9 @@ dependencies {
     implementation(libs.store)
 
     implementation(libs.retrosheet)
-    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
-    implementation(libs.moshi.kotlin)
+    implementation(libs.kotlin.x.serialization.json)
 
     implementation(libs.android.x.room.ktx)
     ksp(libs.android.x.room.compiler)
