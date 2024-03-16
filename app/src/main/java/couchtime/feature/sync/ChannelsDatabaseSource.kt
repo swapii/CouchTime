@@ -20,6 +20,11 @@ class LocalChannelsSourceImpl @Inject constructor(
             .getChannel(id.value)
             .toDomainModel()
 
+    override suspend fun getChannelsByName(channelName: String): List<Channel> =
+        channelDao
+            .getChannels(channelName)
+            .map(ChannelDatabaseEntity::toDomainModel)
+
     override suspend fun save(channels: List<Channel>): Int {
         var count = 0
         withDatabaseTransaction {

@@ -7,6 +7,8 @@ interface LocalChannelsSource {
 
     suspend fun getChannel(id: ChannelId): Channel
 
+    suspend fun getChannelsByName(channelName: String): List<Channel>
+
     suspend fun save(channels: List<Channel>): Int
 
 }

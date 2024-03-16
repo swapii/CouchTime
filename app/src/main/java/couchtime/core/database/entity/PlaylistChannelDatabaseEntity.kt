@@ -42,6 +42,9 @@ interface ChannelDao {
     @Query("SELECT * FROM channel WHERE id = :id")
     suspend fun getChannel(id: String): ChannelDatabaseEntity
 
+    @Query("SELECT * FROM channel WHERE name = :channelName")
+    suspend fun getChannels(channelName: String): List<ChannelDatabaseEntity>
+
     @Insert
     suspend fun save(channels: List<ChannelDatabaseEntity>)
 
