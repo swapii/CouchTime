@@ -1,6 +1,7 @@
 package couchtime
 
 import android.media.tv.TvInputService
+import couchtime.PlayerSession
 import timber.log.Timber
 
 class InputService : TvInputService() {
@@ -9,9 +10,9 @@ class InputService : TvInputService() {
         Timber.d("init")
     }
 
-    override fun onCreateSession(inputId: String): Session? {
-        Timber.d("onCreateSession, inputId=[$inputId]")
-        return null
+    override fun onCreateSession(inputId: String): Session {
+        Timber.d("Create session for inputId [$inputId]")
+        return PlayerSession(context = this)
     }
 
 }

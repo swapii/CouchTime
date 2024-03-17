@@ -5,9 +5,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.lifecycle.lifecycleScope
+import couchtime.feature.sync.SyncChannels
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class SetupActivity : ComponentActivity() {
+
+    private val syncChannels: SyncChannels
+            by lazy {
+                SyncChannels(
+                    context = applicationContext,
+                )
+            }
 
     init {
         Timber.d("init")
@@ -21,6 +31,9 @@ class SetupActivity : ComponentActivity() {
             Button(
                 onClick = {
                     Timber.i("Sync channels button clicked")
+                    lifecycleScope.launch {
+                        syncChannels()
+                    }
                 },
             ) {
                 Text(text = "Sync channels")
