@@ -26,6 +26,11 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
                     library("exoplayer.hls", "androidx.media3:media3-exoplayer-hls:$version")
                 }
 
+                group("room", "2.6.1") {
+                    library("compiler", "androidx.room:room-compiler") { version(version) }
+                    library("ktx", "androidx.room:room-ktx") { version(version) }
+                }
+
             }
 
         }

@@ -8,9 +8,13 @@ import android.database.Cursor
 import android.media.tv.TvContract
 import android.net.Uri
 import couchtime.core.channels.model.ChannelId
+import couchtime.core.channels.model.PlaylistChannel
+import couchtime.core.coroutines.chunked
 import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
 import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -43,18 +47,18 @@ internal class TvContractChannelsSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun save(channels: Sequence<ContentValues>): Int {
+    override suspend fun save(inputId: String, channels: Flow<PlaylistChannel>): Int {
         Timber.d("Save channels")
         return resolveContent {
             var newElementsCount = 0
             channels
                 .map {
                     ContentProviderOperation.newInsert(TvContract.Channels.CONTENT_URI)
-                        .withValues(it)
+                        .withValues(it.toContentValues(inputId))
                         .build()
                 }
                 .chunked(100)
-                .forEach {
+                .collect {
                     newElementsCount += it.size
                     if (newElementsCount % 500 == 0) {
                         Timber.v("Processed $newElementsCount")
@@ -94,7 +98,7 @@ internal class TvContractChannelsSourceImpl @Inject constructor(
         }
     }
 
-    private suspend fun <T> resolveContent(resolve: ContentResolver.() -> T): T =
+    private suspend fun <T> resolveContent(resolve: suspend ContentResolver.() -> T): T =
         withContext(Dispatchers.IO) {
             context.contentResolver.resolve()
         }
@@ -114,4 +118,15 @@ private fun ContentResolver.count(uri: Uri): Int =
                 it.moveToFirst()
                 it.getInt(0)
             }
+        }
+
+private fun PlaylistChannel.toContentValues(inputId: String): ContentValues =
+    ContentValues()
+        .apply {
+            put(TvContract.Channels.COLUMN_INPUT_ID, inputId)
+            put(TvContract.Channels.COLUMN_TYPE, TvContract.Channels.TYPE_OTHER)
+            put(TvContract.Channels.COLUMN_SERVICE_TYPE, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)
+            put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID, id.value.toString())
+            put(TvContract.Channels.COLUMN_DISPLAY_NUMBER, id.value.toString())
+            put(TvContract.Channels.COLUMN_DISPLAY_NAME, name)
         }
