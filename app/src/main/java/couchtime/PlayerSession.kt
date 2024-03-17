@@ -1,16 +1,17 @@
 package couchtime
 
 import android.content.Context
-import android.database.Cursor
-import android.media.tv.TvContract
 import android.media.tv.TvInputManager
 import android.media.tv.TvInputService.Session
 import android.net.Uri
 import android.view.Surface
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import couchtime.core.m3u.PlaylistChannelData
-import couchtime.feature.sync.GetPlaylistChannels
+import couchtime.core.channels.model.ChannelId
+import couchtime.core.channels.model.PlaylistChannel
+import couchtime.core.channels.source.PlaylistChannelsSource
+import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
+import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -27,75 +28,59 @@ import timber.log.Timber
 import javax.inject.Inject
 
 class PlayerSession @Inject constructor(
-    private val context: Context,
-    private val getPlaylistChannels: GetPlaylistChannels,
+    context: Context,
+    private val playlistChannelsSource: PlaylistChannelsSource,
+    private val tvContractChannelsSource: TvContractChannelsSource,
 ) : Session(context) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val channelsList: Store<Unit, List<PlaylistChannelData>> =
+    private val channelsList: Store<Unit, List<PlaylistChannel>> =
         StoreBuilder
             .from(
                 fetcher = Fetcher.of { _: Unit ->
-                    getPlaylistChannels()
-                        .toList()
+                    playlistChannelsSource.readAll().toList()
                 },
             )
             .cachePolicy(
-                MemoryPolicy.builder<Unit, List<PlaylistChannelData>>()
+                MemoryPolicy.builder<Unit, List<PlaylistChannel>>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val channels: Store<Long, PlaylistChannelData> =
+    private val channels: Store<ChannelId, PlaylistChannel> =
         StoreBuilder
             .from(
-                fetcher = Fetcher.of { channelId: Long ->
+                fetcher = Fetcher.of { channelId: ChannelId ->
                     channelsList.get(Unit).first { it.id == channelId }
                 },
             )
             .cachePolicy(
-                MemoryPolicy.builder<Long, PlaylistChannelData>()
+                MemoryPolicy.builder<ChannelId, PlaylistChannel>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val channelIds: Store<Uri, Long> =
+    private val channelIds: Store<TvContractChannelAddress, ChannelId> =
         StoreBuilder.from(
-            Fetcher.of { channelUri: Uri ->
-                withContext(Dispatchers.IO) {
-                    context.contentResolver
-                        .query(
-                            /* uri = */ channelUri,
-                            /* projection = */ arrayOf(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID),
-                            /* queryArgs = */ null,
-                            /* cancellationSignal = */ null,
-                        )!!
-                        .use { cursor: Cursor ->
-                            check(cursor.count == 1)
-                            val columnIndex: Int =
-                                cursor.getColumnIndex(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID)
-                            check(columnIndex >= 0)
-                            cursor.moveToFirst()
-                            cursor.getString(columnIndex).toLong()
-                        }
-                }
+            Fetcher.of { address: TvContractChannelAddress ->
+                tvContractChannelsSource.getChannelId(address)
             }
         )
             .cachePolicy(
-                MemoryPolicy.builder<Uri, Long>()
+                MemoryPolicy.builder<TvContractChannelAddress, ChannelId>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val mediaItemsStore: Store<Uri, MediaItem> =
+    private val mediaItemsStore: Store<TvContractChannelAddress, MediaItem> =
         StoreBuilder
             .from(
-                fetcher = Fetcher.of { channelUri: Uri ->
-                    val channelDomainId: Long = channelIds.get(channelUri)
+                fetcher = Fetcher.of { channelUri: TvContractChannelAddress ->
+                    val channelDomainId: ChannelId = channelIds.get(channelUri)
                     channels.get(channelDomainId)
                         .let {
                             MediaItem.fromUri(it.address)
@@ -103,32 +88,32 @@ class PlayerSession @Inject constructor(
                 }
             )
             .cachePolicy(
-                MemoryPolicy.builder<Uri, MediaItem>()
+                MemoryPolicy.builder<TvContractChannelAddress, MediaItem>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val channelUri = MutableStateFlow<Uri?>(null)
+    private val channel = MutableStateFlow<TvContractChannelAddress?>(null)
 
     private val player = ExoPlayer.Builder(context).build()
 
     init {
         coroutineScope.launch {
-            channelUri
-                .collectLatest { channelUri ->
+            channel
+                .collectLatest { channel: TvContractChannelAddress? ->
                     withContext(Dispatchers.Main.immediate) {
-                        if (channelUri == null) {
+                        if (channel == null) {
                             player.stop()
                         } else {
-                            val mediaItem = mediaItemsStore.get(channelUri)
+                            val mediaItem = mediaItemsStore.get(channel)
                             try {
                                 player.setMediaItem(mediaItem)
                                 player.prepare()
                                 player.play()
                                 notifyVideoAvailable()
                             } catch (e: Exception) {
-                                val message = "Can't tune to channel [$channelUri]"
+                                val message = "Can't tune to channel [$channel]"
                                 val exception = Exception(message, e)
                                 Timber.e(exception, message)
                                 notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN)
@@ -147,7 +132,7 @@ class PlayerSession @Inject constructor(
 
     override fun onTune(channelUri: Uri): Boolean {
         Timber.d("Tune to channel [$channelUri]")
-        this.channelUri.value = channelUri
+        this.channel.value = TvContractChannelAddress(channelUri)
         return true
     }
 

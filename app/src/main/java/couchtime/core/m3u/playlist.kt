@@ -1,10 +1,20 @@
 package couchtime.core.m3u
 
-import android.net.Uri
-import androidx.core.net.toUri
-import timber.log.Timber
+data class M3uPlaylistItem(
+    val extInf: ExtInf,
+    val extGrp: String,
+    val address: String,
+) {
 
-internal fun Sequence<String>.parsePlaylist(): Sequence<PlaylistChannelData> {
+    data class ExtInf(
+        val runtimeSeconds: Int,
+        val displayTitle: String,
+        val properties: Map<String, String>,
+    )
+
+}
+
+internal fun Sequence<String>.parseM3uPlaylist(): Sequence<M3uPlaylistItem> {
 
     val iterator = iterator()
 
@@ -13,53 +23,23 @@ internal fun Sequence<String>.parsePlaylist(): Sequence<PlaylistChannelData> {
 
     return iterator.asSequence()
         .chunked(3)
-        .mapIndexed { index, lines: List<String> ->
-
-            if (index % 250 == 0) {
-                Timber.v("Parse playlist channel index $index")
-            }
+        .map { lines: List<String> ->
 
             require(lines.size == 3)
 
-            val addressString = lines[2]
-            val addressSuffix = "/index.m3u8"
-            require(addressString.endsWith(addressSuffix))
-
-            val id: Long = addressString.removeSuffix(addressSuffix).takeLastWhile { it.isDigit() }.toLong()
-
             val extInf = lines[0].parseAsExtInf()
             val extGrp = lines[1].parseAsExtGrp()
-            val address = addressString.toUri()
+            val addressString = lines[2]
 
-            PlaylistChannelData(
-                id = id,
-                name = extInf.displayTitle,
-                group = extGrp,
-                address = address,
+            M3uPlaylistItem(
+                extInf = extInf,
+                extGrp = extGrp,
+                address = addressString,
             )
         }
 }
 
-data class PlaylistChannelData(
-    val id: Long,
-    val name: String,
-    val group: String,
-    val address: Uri,
-)
-
-data class ExtInf(
-    val runtimeSeconds: Int,
-    val displayTitle: String,
-    val properties: Map<String, String>,
-)
-
-fun String.parseAsExtGrp(): String {
-    val prefix = "#EXTGRP:"
-    require(startsWith(prefix))
-    return drop(prefix.length)
-}
-
-fun String.parseAsExtInf(): ExtInf {
+private fun String.parseAsExtInf(): M3uPlaylistItem.ExtInf {
 
     val prefix = "#EXTINF:"
     require(startsWith(prefix))
@@ -85,9 +65,15 @@ fun String.parseAsExtInf(): ExtInf {
                 propertyName to propertyValue
             }
 
-    return ExtInf(
+    return M3uPlaylistItem.ExtInf(
         runtimeSeconds = runtimeSeconds,
         displayTitle = displayTitle,
         properties = properties,
     )
+}
+
+private fun String.parseAsExtGrp(): String {
+    val prefix = "#EXTGRP:"
+    require(startsWith(prefix))
+    return drop(prefix.length)
 }

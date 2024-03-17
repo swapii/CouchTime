@@ -1,8 +1,8 @@
 package couchtime.feature.sync
 
 import android.content.Context
-import couchtime.core.m3u.PlaylistChannelData
-import couchtime.core.m3u.parsePlaylist
+import couchtime.core.m3u.M3uPlaylistItem
+import couchtime.core.m3u.parseM3uPlaylist
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -13,7 +13,7 @@ class GetPlaylistChannels @Inject constructor(
     private val context: Context,
 ) {
 
-    suspend operator fun invoke(): Sequence<PlaylistChannelData> {
+    suspend operator fun invoke(): Sequence<M3uPlaylistItem> {
         Timber.d("Get playlist channels")
         val applicationId = context.packageName
         return withContext(Dispatchers.IO) {
@@ -23,7 +23,7 @@ class GetPlaylistChannels @Inject constructor(
                     .use { reader ->
                         yieldAll(reader.lineSequence())
                     }
-            }.parsePlaylist()
+            }.parseM3uPlaylist()
         }
     }
 
