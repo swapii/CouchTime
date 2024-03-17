@@ -1,2 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<manifest/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature
+        android:name="android.software.live_tv"
+        android:required="true" />
+
+    <application>
+
+        <activity
+            android:name=".SetupActivity"
+            android:exported="true" />
+
+        <service
+            android:name=".InputService"
+            android:exported="true"
+            android:label="CouchTime"
+            android:permission="android.permission.BIND_TV_INPUT">
+            <intent-filter>
+                <action android:name="android.media.tv.TvInputService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.media.tv.input"
+                android:resource="@xml/couchtime_tvinput" />
+        </service>
+
+    </application>
+
+</manifest>
