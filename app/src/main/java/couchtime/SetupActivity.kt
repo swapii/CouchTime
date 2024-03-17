@@ -1,12 +1,13 @@
 package couchtime
 
-import android.app.Activity
 import android.os.Bundle
-import android.widget.FrameLayout
-import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import timber.log.Timber
 
-class SetupActivity : Activity() {
+class SetupActivity : ComponentActivity() {
 
     init {
         Timber.d("init")
@@ -15,17 +16,17 @@ class SetupActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         Timber.d("onCreate")
         super.onCreate(savedInstanceState)
-        setContentView(
-            FrameLayout(this)
-                .apply {
-                    addView(
-                        TextView(this@SetupActivity)
-                            .apply {
-                                this.text = "Hello TV!"
-                            }
-                    )
-                }
-        )
+
+        setContent {
+            Button(
+                onClick = {
+                    Timber.i("Sync channels button clicked")
+                },
+            ) {
+                Text(text = "Sync channels")
+            }
+        }
+
     }
 
 }
