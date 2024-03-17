@@ -4,15 +4,15 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import couchtime.core.database.converter.UriConverter
-import couchtime.core.database.entity.PlaylistChannelDao
-import couchtime.core.database.entity.PlaylistChannelDatabaseEntity
+import couchtime.core.database.entity.ChannelDao
+import couchtime.core.database.entity.ChannelDatabaseEntity
 import javax.inject.Singleton
 
 @Singleton
 @Database(
     version = 1,
     entities = [
-        PlaylistChannelDatabaseEntity::class,
+        ChannelDatabaseEntity::class,
     ],
 )
 @TypeConverters(
@@ -20,6 +20,6 @@ import javax.inject.Singleton
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun playlistChannelDao(): PlaylistChannelDao
+    abstract fun channelDao(): ChannelDao
 
 }

@@ -9,25 +9,20 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 
 @Entity(
-    tableName = "playlist_channel",
+    tableName = "channel",
 )
-data class PlaylistChannelDatabaseEntity(
+data class ChannelDatabaseEntity(
 
     @PrimaryKey
     @ColumnInfo(
-        name = "id",
+        name = "number",
     )
-    val id: Long,
+    val number: String,
 
     @ColumnInfo(
         name = "name",
     )
     val name: String,
-
-    @ColumnInfo(
-        name = "group",
-    )
-    val group: String,
 
     @ColumnInfo(
         name = "address",
@@ -37,18 +32,18 @@ data class PlaylistChannelDatabaseEntity(
 )
 
 @Dao
-interface PlaylistChannelDao {
+interface ChannelDao {
 
-    @Query("SELECT * FROM playlist_channel WHERE id = :channelId")
-    suspend fun getChannel(channelId: Long): PlaylistChannelDatabaseEntity?
+    @Query("SELECT * FROM channel WHERE number = :channelNumber")
+    suspend fun getChannel(channelNumber: String): ChannelDatabaseEntity
 
-    @Query("SELECT * FROM playlist_channel")
-    suspend fun getAll(): List<PlaylistChannelDatabaseEntity>
+    @Query("SELECT * FROM channel")
+    suspend fun getAll(): List<ChannelDatabaseEntity>
 
     @Insert
-    suspend fun save(channels: List<PlaylistChannelDatabaseEntity>)
+    suspend fun save(channels: List<ChannelDatabaseEntity>)
 
-    @Query("DELETE FROM playlist_channel")
+    @Query("DELETE FROM channel")
     suspend fun deleteAll()
 
 }

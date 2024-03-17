@@ -22,6 +22,6 @@ internal class DatabaseCoreModule {
             .build()
 
     @Provides
-    fun playlistChannelDao(database: AppDatabase) = database.playlistChannelDao()
+    fun playlistChannelDao(database: AppDatabase) = database.channelDao()
 
 }

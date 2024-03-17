@@ -7,19 +7,16 @@ import android.net.Uri
 import android.view.Surface
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import couchtime.core.channels.model.ChannelId
-import couchtime.core.channels.model.PlaylistChannel
 import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
 import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
-import couchtime.feature.sync.PlaylistChannelsDatabaseSource
+import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
+import couchtime.core.tvcontract.domain.model.TvContractDisplayNumber
+import couchtime.feature.sync.ChannelsDatabaseSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mobilenativefoundation.store.store5.Fetcher
@@ -29,45 +26,37 @@ import org.mobilenativefoundation.store.store5.StoreBuilder
 import org.mobilenativefoundation.store.store5.impl.extensions.get
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 class PlayerSession @Inject constructor(
     context: Context,
-    private val playlistChannelsDatabaseSource: PlaylistChannelsDatabaseSource,
+    private val channelsDatabaseSource: ChannelsDatabaseSource,
     private val tvContractChannelsSource: TvContractChannelsSource,
 ) : Session(context) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val channels: Store<ChannelId, PlaylistChannel> =
+    private val channels: Store<TvContractDisplayNumber, GoogleSheetChannel> =
         StoreBuilder
             .from(
-                fetcher = Fetcher.of { channelId: ChannelId ->
-                    while (currentCoroutineContext().isActive) {
-                        val channel: PlaylistChannel? = playlistChannelsDatabaseSource.getChannel(channelId)
-                        if (channel != null) {
-                            return@of channel
-                        }
-                        delay(1.seconds)
-                    }
-                    error("This should not be happened!")
+                fetcher = Fetcher.of { displayNumber: TvContractDisplayNumber ->
+                    channelsDatabaseSource.getChannel(displayNumber.value)
                 },
             )
             .cachePolicy(
-                MemoryPolicy.builder<ChannelId, PlaylistChannel>()
+                MemoryPolicy.builder<TvContractDisplayNumber, GoogleSheetChannel>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val channelIds: Store<TvContractChannelAddress, ChannelId> =
+    private val channelNumbers: Store<TvContractChannelAddress, TvContractDisplayNumber> =
         StoreBuilder.from(
-            Fetcher.of { address: TvContractChannelAddress ->
-                tvContractChannelsSource.getChannelId(address)
+            Fetcher.of { channelAddress: TvContractChannelAddress ->
+                tvContractChannelsSource.getChannelDisplayNumber(channelAddress)
             }
         )
             .cachePolicy(
-                MemoryPolicy.builder<TvContractChannelAddress, ChannelId>()
+                MemoryPolicy.builder<TvContractChannelAddress, TvContractDisplayNumber>()
                     .build()
             )
             .scope(coroutineScope)
@@ -76,9 +65,9 @@ class PlayerSession @Inject constructor(
     private val mediaItemsStore: Store<TvContractChannelAddress, MediaItem> =
         StoreBuilder
             .from(
-                fetcher = Fetcher.of { channelUri: TvContractChannelAddress ->
-                    val channelDomainId: ChannelId = channelIds.get(channelUri)
-                    channels.get(channelDomainId)
+                fetcher = Fetcher.of { channelAddress: TvContractChannelAddress ->
+                    val displayNumber: TvContractDisplayNumber = channelNumbers.get(channelAddress)
+                    channels.get(displayNumber)
                         .let {
                             MediaItem.fromUri(it.address)
                         }

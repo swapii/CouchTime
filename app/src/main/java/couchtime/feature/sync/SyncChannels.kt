@@ -1,26 +1,24 @@
 package couchtime.feature.sync
 
-import android.content.ContentValues
-import android.media.tv.TvContract
-import couchtime.core.channels.model.PlaylistChannel
-import couchtime.core.channels.source.PlaylistChannelsSource
+import couchtime.core.googlesheet.domain.source.GoogleSheetChannelsSource
 import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
+import kotlinx.coroutines.flow.asFlow
 import timber.log.Timber
 import javax.inject.Inject
 
 internal class SyncChannels @Inject constructor(
-    private val playlistChannelsDiskSource: PlaylistChannelsSource,
-    private val playlistChannelsDatabaseSource: PlaylistChannelsDatabaseSource,
+    private val googleSheetChannelsSource: GoogleSheetChannelsSource,
+    private val channelsDatabaseSource: ChannelsDatabaseSource,
     private val tvContractChannelsSource: TvContractChannelsSource,
 ) {
 
     suspend operator fun invoke(inputId: String) {
         Timber.d("Sync channels")
 
-        playlistChannelsDatabaseSource.deleteAll()
+        channelsDatabaseSource.deleteAll()
 
-        playlistChannelsDatabaseSource.save(
-            playlistChannelsDiskSource.readAll()
+        channelsDatabaseSource.save(
+            googleSheetChannelsSource.readAll().asFlow()
         )
 
         val count: Int =
@@ -34,7 +32,7 @@ internal class SyncChannels @Inject constructor(
         val channelsSaved: Int =
             tvContractChannelsSource.save(
                 inputId = inputId,
-                channels = playlistChannelsDatabaseSource.readAll(),
+                channels = channelsDatabaseSource.readAll(),
             )
 
         val newCount = tvContractChannelsSource.count()
@@ -50,14 +48,3 @@ internal class SyncChannels @Inject constructor(
     }
 
 }
-
-private fun PlaylistChannel.toContentValues(inputId: String): ContentValues =
-    ContentValues()
-        .apply {
-            put(TvContract.Channels.COLUMN_INPUT_ID, inputId)
-            put(TvContract.Channels.COLUMN_TYPE, TvContract.Channels.TYPE_OTHER)
-            put(TvContract.Channels.COLUMN_SERVICE_TYPE, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)
-            put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_ID, id.value.toString())
-            put(TvContract.Channels.COLUMN_DISPLAY_NUMBER, id.value.toString())
-            put(TvContract.Channels.COLUMN_DISPLAY_NAME, name)
-        }
