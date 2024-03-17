@@ -52,6 +52,18 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
             plugin("android", "org.jetbrains.kotlin.android", version)
         }
 
+        library("retrosheet", "com.github.theapache64:retrosheet:2.0.1")
+
+        group("retrofit", "2.9.0") {
+            library("converter.moshi", "com.squareup.retrofit2:converter-moshi") { version(version) }
+        }
+
+        group("moshi", "1.15.1") {
+            library("kotlin", "com.squareup.moshi:moshi-kotlin") { version(version) }
+        }
+
+        library("okhttp", "com.squareup.okhttp3:okhttp:4.12.0")
+
         library("timber", "com.jakewharton.timber:timber:5.0.1")
 
     }

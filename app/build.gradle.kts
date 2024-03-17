@@ -38,8 +38,6 @@ android {
 
 dependencies {
 
-    implementation(projects.common.m3u)
-
     implementation(libs.android.x.activity.compose)
     implementation(libs.android.x.media3.exoplayer)
     implementation(libs.android.x.media3.exoplayer.hls)
@@ -48,6 +46,11 @@ dependencies {
     implementation(libs.android.x.compose.material3)
 
     implementation(libs.store)
+
+    implementation(libs.retrosheet)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.moshi.kotlin)
 
     implementation(libs.android.x.room.ktx)
     ksp(libs.android.x.room.compiler)
