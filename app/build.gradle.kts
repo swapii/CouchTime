@@ -26,3 +26,9 @@ android {
     }
 
 }
+
+dependencies {
+
+    implementation(libs.timber)
+
+}

@@ -5,7 +5,7 @@
         android:name="android.software.live_tv"
         android:required="true" />
 
-    <application>
+    <application android:name=".CouchTimeApplication">
 
         <activity
             android:name=".SetupActivity"
