@@ -4,13 +4,14 @@ import android.media.tv.TvContract
 import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
 import couchtime.core.googlesheet.domain.source.GoogleSheetChannelsSource
 import couchtime.core.tvcontract.domain.model.TvContractChannel
+import couchtime.core.tvcontract.domain.model.TvContractChannelId
 import couchtime.core.tvcontract.domain.model.TvContractDisplayNumber
 import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
 import couchtime.feature.channel.domain.model.Channel
 import couchtime.feature.channel.domain.model.ChannelDisplayNumber
+import couchtime.feature.channel.domain.model.ChannelId
+import couchtime.feature.channel.domain.model.asChannelId
 import couchtime.feature.channel.domain.source.LocalChannelsSource
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,33 +24,66 @@ internal class SyncChannels @Inject constructor(
     suspend operator fun invoke(inputId: String) {
         Timber.d("Sync channels")
 
-        localChannelsSource.save(
-            googleSheetChannelsSource.readAll().asFlow()
+        val allChannels: List<Channel> =
+            googleSheetChannelsSource.getAll()
                 .map(GoogleSheetChannel::toChannel)
-        )
 
-        val count: Int =
-            tvContractChannelsSource.count()
+        val channelIds: Set<ChannelId> =
+            allChannels
+                .map { it.id }
+                .ensureSet()
 
-        if (count > 0) {
-            Timber.d("Deleting $count existing rows")
-            tvContractChannelsSource.deleteAll()
-        }
+        localChannelsSource.save(allChannels)
 
-        val channelsSaved: Int =
-            tvContractChannelsSource.save(
-                localChannelsSource.readAll()
-                    .map { it.tvContractChannel(inputId) },
-            )
+        Timber.v("All channels $channelIds")
 
-        val newCount = tvContractChannelsSource.count()
+        tvContractChannelsSource.getAll()
+            .filter { it.internalProviderId?.asChannelId() !in channelIds }
+            .map { it.id!! }
+            .ensureSet()
+            .let { ids: Set<TvContractChannelId> ->
+                Timber.v("Channels to delete from TV contract $ids")
+                tvContractChannelsSource.delete(ids)
+            }
 
-        if (newCount != channelsSaved) {
-            val message = "Content resolver contains $newCount rows but should be $channelsSaved"
-            val e = IllegalStateException(message)
-            Timber.e(e, message)
-            throw e
-        }
+        val currentTvContractChannels: List<TvContractChannel> =
+            tvContractChannelsSource.getAll()
+
+        Timber.v("Channels in TV contract after clear $currentTvContractChannels")
+
+        val channelIdsToUpdate: Set<ChannelId> =
+            currentTvContractChannels
+                .mapNotNull { it.internalProviderId?.asChannelId() }
+                .filter { it in channelIds }
+                .toSet()
+
+        val channelsIdsToInsert: Set<ChannelId> =
+            channelIds - channelIdsToUpdate
+
+        allChannels
+            .filter { it.id in channelsIdsToInsert }
+            .map { it.toTvContractChannel(inputId) }
+            .let { channels: List<TvContractChannel> ->
+                Timber.v("Channels to add to TV contract $channels")
+                tvContractChannelsSource.insert(channels)
+            }
+
+        currentTvContractChannels
+            .filter { it.internalProviderId?.asChannelId() in channelIdsToUpdate }
+            .map { tvContractChannel ->
+                val updatedChannel: TvContractChannel =
+                    allChannels
+                        .first { it.id == tvContractChannel.internalProviderId!!.asChannelId() }
+                        .toTvContractChannel(inputId)
+                tvContractChannel.copy(
+                    displayNumber = updatedChannel.displayNumber,
+                    displayName = updatedChannel.displayName,
+                )
+            }
+            .let { channels ->
+                Timber.v("Channels to update in TV contract $channels")
+                tvContractChannelsSource.update(channels)
+            }
 
         Timber.d("Channels synced")
     }
@@ -58,16 +92,25 @@ internal class SyncChannels @Inject constructor(
 
 private fun GoogleSheetChannel.toChannel(): Channel =
     Channel(
+        id = id.asChannelId(),
         displayNumber = ChannelDisplayNumber(displayNumber.value),
         name = name,
         address = address,
     )
 
-private fun Channel.tvContractChannel(inputId: String): TvContractChannel =
+private fun Channel.toTvContractChannel(inputId: String): TvContractChannel =
     TvContractChannel(
         inputId = inputId,
         type = TvContract.Channels.TYPE_OTHER,
         serviceType = TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO,
         displayNumber = TvContractDisplayNumber(displayNumber.value),
-        name = name,
+        displayName = name,
+        internalProviderId = id.value,
     )
+
+private fun <T> Collection<T>.ensureSet(): Set<T> =
+    buildSet {
+        this@ensureSet.forEach {
+            require(add(it))
+        }
+    }

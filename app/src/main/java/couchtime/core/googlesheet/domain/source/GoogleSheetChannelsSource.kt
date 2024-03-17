@@ -4,6 +4,6 @@ import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
 
 interface GoogleSheetChannelsSource {
 
-    suspend fun readAll(): List<GoogleSheetChannel>
+    suspend fun getAll(): List<GoogleSheetChannel>
 
 }

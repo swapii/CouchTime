@@ -52,7 +52,7 @@ internal class GoogleSheetCoreDataModule {
                 .setLogging(false)
                 .addSheet(
                     "Channels",
-                    "number", "name", "stream",
+                    "id", "number", "name", "stream",
                 )
                 .build()
 

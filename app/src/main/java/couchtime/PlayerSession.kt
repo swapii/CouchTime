@@ -11,7 +11,8 @@ import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
 import couchtime.core.tvcontract.domain.model.TvContractDisplayNumber
 import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
 import couchtime.feature.channel.domain.model.Channel
-import couchtime.feature.channel.domain.model.toChannelDisplayNumber
+import couchtime.feature.channel.domain.model.ChannelId
+import couchtime.feature.channel.domain.model.asChannelId
 import couchtime.feature.channel.domain.source.LocalChannelsSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,28 +37,28 @@ class PlayerSession @Inject constructor(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val channels: Store<TvContractDisplayNumber, Channel> =
+    private val channels: Store<ChannelId, Channel> =
         StoreBuilder
             .from(
-                fetcher = Fetcher.of { displayNumber: TvContractDisplayNumber ->
-                    localChannelsSource.getChannel(displayNumber.value.toChannelDisplayNumber())
+                fetcher = Fetcher.of { id: ChannelId ->
+                    localChannelsSource.getChannel(id)
                 },
             )
             .cachePolicy(
-                MemoryPolicy.builder<TvContractDisplayNumber, Channel>()
+                MemoryPolicy.builder<ChannelId, Channel>()
                     .build()
             )
             .scope(coroutineScope)
             .build()
 
-    private val channelNumbers: Store<TvContractChannelAddress, TvContractDisplayNumber> =
+    private val channelIds: Store<TvContractChannelAddress, ChannelId> =
         StoreBuilder.from(
             Fetcher.of { channelAddress: TvContractChannelAddress ->
-                tvContractChannelsSource.getChannelDisplayNumber(channelAddress)
+                tvContractChannelsSource.getChannelInternalProviderId(channelAddress).asChannelId()
             }
         )
             .cachePolicy(
-                MemoryPolicy.builder<TvContractChannelAddress, TvContractDisplayNumber>()
+                MemoryPolicy.builder<TvContractChannelAddress, ChannelId>()
                     .build()
             )
             .scope(coroutineScope)
@@ -67,8 +68,8 @@ class PlayerSession @Inject constructor(
         StoreBuilder
             .from(
                 fetcher = Fetcher.of { channelAddress: TvContractChannelAddress ->
-                    val displayNumber: TvContractDisplayNumber = channelNumbers.get(channelAddress)
-                    channels.get(displayNumber)
+                    val channelId: ChannelId = channelIds.get(channelAddress)
+                    channels.get(channelId)
                         .let {
                             MediaItem.fromUri(it.address)
                         }

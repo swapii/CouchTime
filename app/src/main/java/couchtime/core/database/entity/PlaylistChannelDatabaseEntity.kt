@@ -15,6 +15,11 @@ data class ChannelDatabaseEntity(
 
     @PrimaryKey
     @ColumnInfo(
+        name = "id",
+    )
+    val id: String,
+
+    @ColumnInfo(
         name = "number",
     )
     val number: String,
@@ -34,11 +39,8 @@ data class ChannelDatabaseEntity(
 @Dao
 interface ChannelDao {
 
-    @Query("SELECT * FROM channel WHERE number = :channelNumber")
-    suspend fun getChannel(channelNumber: String): ChannelDatabaseEntity
-
-    @Query("SELECT * FROM channel")
-    suspend fun getAll(): List<ChannelDatabaseEntity>
+    @Query("SELECT * FROM channel WHERE id = :id")
+    suspend fun getChannel(id: String): ChannelDatabaseEntity
 
     @Insert
     suspend fun save(channels: List<ChannelDatabaseEntity>)

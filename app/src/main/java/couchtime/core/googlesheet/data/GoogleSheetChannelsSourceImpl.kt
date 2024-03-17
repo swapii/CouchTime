@@ -10,7 +10,7 @@ internal class GoogleSheetChannelsSourceImpl @Inject constructor(
     private val googleSheetSourceProvider: Provider<GoogleSheetSource?>,
 ) : GoogleSheetChannelsSource {
 
-    override suspend fun readAll(): List<GoogleSheetChannel> {
+    override suspend fun getAll(): List<GoogleSheetChannel> {
         Timber.d("Get playlist channels")
 
         val googleSheetSource: GoogleSheetSource =

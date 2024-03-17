@@ -8,13 +8,14 @@ import retrofit2.http.GET
 
 interface GoogleSheetSource {
 
-    @Read("SELECT number, name, stream")
+    @Read("SELECT id, number, name, stream")
     @GET("Channels")
     suspend fun getChannels(): List<Channel>
 
 }
 
 data class Channel(
+    val id: String,
     val number: String,
     val name: String,
     val stream: String,
@@ -22,6 +23,7 @@ data class Channel(
 
 internal fun Channel.toGoogleSheetChannel(): GoogleSheetChannel =
     GoogleSheetChannel(
+        id = id,
         displayNumber = GoogleSheetChannelDisplayNumber(number),
         name = name,
         address = stream.toUri(),

@@ -1,17 +1,12 @@
 package couchtime.feature.channel.domain.source
 
 import couchtime.feature.channel.domain.model.Channel
-import couchtime.feature.channel.domain.model.ChannelDisplayNumber
-import kotlinx.coroutines.flow.Flow
+import couchtime.feature.channel.domain.model.ChannelId
 
 interface LocalChannelsSource {
 
-    fun readAll(): Flow<Channel>
+    suspend fun getChannel(id: ChannelId): Channel
 
-    suspend fun getChannel(channelNumber: ChannelDisplayNumber): Channel
-
-    suspend fun save(channels: Flow<Channel>): Int
-
-    suspend fun deleteAll()
+    suspend fun save(channels: List<Channel>): Int
 
 }
