@@ -33,6 +33,8 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
                     library("ktx", "androidx.room:room-ktx") { version(version) }
                 }
 
+                library("datastore", "androidx.datastore:datastore:1.0.0")
+
             }
 
         }
@@ -47,11 +49,10 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
             library("hilt.android", "com.google.dagger:hilt-android") { version(version) }
         }
 
-        plugin("ksp", "com.google.devtools.ksp").version("1.9.22-1.0.17")
-
         group("kotlin", "1.9.22") {
             plugin("jvm", "org.jetbrains.kotlin.jvm").version(version)
             plugin("android", "org.jetbrains.kotlin.android").version(version)
+            plugin("ksp", "com.google.devtools.ksp").version("$version-1.0.17")
         }
 
         library("retrosheet", "com.github.theapache64:retrosheet:2.0.1")
@@ -65,6 +66,11 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
         }
 
         library("okhttp", "com.squareup.okhttp3:okhttp:4.12.0")
+
+        group("protobuf", "3.25.3") {
+            plugin("com.google.protobuf").version("0.9.4")
+            library("javalite", "com.google.protobuf:protobuf-javalite") { version(version) }
+        }
 
         library("timber", "com.jakewharton.timber:timber:5.0.1")
 

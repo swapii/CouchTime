@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+option java_package = "couchtime";
+option java_multiple_files = true;
+
+message Settings {
+  string google_sheet_address = 1;
+}

@@ -1,8 +1,13 @@
+import com.google.protobuf.gradle.id
+import org.gradle.configurationcache.extensions.capitalized
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     plugin(libs.plugins.android.application)
+    plugin(libs.plugins.kotlin.ksp)
     plugin(libs.plugins.kotlin.android)
     plugin(libs.plugins.dagger.hilt.android)
-    plugin(libs.plugins.ksp)
+    plugin(libs.plugins.protobuf)
 }
 
 android {
@@ -36,6 +41,30 @@ android {
 
 }
 
+androidComponents {
+    // https://github.com/google/ksp/issues/1590#issuecomment-1846036028
+    onVariants(selector().all()) { variant ->
+        afterEvaluate {
+            val capName = variant.name.capitalized()
+            tasks.getByName<KotlinCompile>("ksp${capName}Kotlin") {
+                setSource(tasks.getByName("generate${capName}Proto").outputs)
+            }
+        }
+    }
+}
+
+protobuf {
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                id("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.android.x.activity.compose)
@@ -54,6 +83,11 @@ dependencies {
 
     implementation(libs.android.x.room.ktx)
     ksp(libs.android.x.room.compiler)
+
+    implementation(libs.android.x.datastore)
+    ksp(libs.android.x.datastore)
+
+    implementation(libs.protobuf.javalite)
 
     implementation(libs.dagger.hilt.android)
     ksp(libs.dagger.hilt.compiler)
