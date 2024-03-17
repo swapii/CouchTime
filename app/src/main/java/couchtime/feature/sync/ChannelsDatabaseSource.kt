@@ -1,5 +1,6 @@
 package couchtime.feature.sync
 
+import couchtime.core.database.WithDatabaseTransaction
 import couchtime.core.coroutines.chunked
 import couchtime.core.database.entity.ChannelDao
 import couchtime.core.database.entity.ChannelDatabaseEntity
@@ -9,10 +10,12 @@ import couchtime.feature.channel.domain.source.LocalChannelsSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
 class LocalChannelsSourceImpl @Inject constructor(
     private val channelDao: ChannelDao,
+    private val withDatabaseTransaction: WithDatabaseTransaction,
 ) : LocalChannelsSource {
 
     override suspend fun getChannel(channelNumber: ChannelDisplayNumber): Channel =
@@ -31,13 +34,18 @@ class LocalChannelsSourceImpl @Inject constructor(
 
     override suspend fun save(channels: Flow<Channel>): Int {
         var count = 0
-        channels
-            .map(Channel::toDatabaseEntity)
-            .chunked(100)
-            .collect { entities ->
-                channelDao.save(entities)
-                count += entities.size
-            }
+        withDatabaseTransaction {
+            channels
+                .map(Channel::toDatabaseEntity)
+                .chunked(100)
+                .onStart {
+                    channelDao.deleteAll()
+                }
+                .collect { entities ->
+                    channelDao.save(entities)
+                    count += entities.size
+                }
+        }
         return count
     }
 

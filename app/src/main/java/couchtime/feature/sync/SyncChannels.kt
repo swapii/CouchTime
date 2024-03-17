@@ -23,8 +23,6 @@ internal class SyncChannels @Inject constructor(
     suspend operator fun invoke(inputId: String) {
         Timber.d("Sync channels")
 
-        localChannelsSource.deleteAll()
-
         localChannelsSource.save(
             googleSheetChannelsSource.readAll().asFlow()
                 .map(GoogleSheetChannel::toChannel)

@@ -6,9 +6,7 @@ import androidx.room.TypeConverters
 import couchtime.core.database.converter.UriConverter
 import couchtime.core.database.entity.ChannelDao
 import couchtime.core.database.entity.ChannelDatabaseEntity
-import javax.inject.Singleton
 
-@Singleton
 @Database(
     version = 1,
     entities = [
