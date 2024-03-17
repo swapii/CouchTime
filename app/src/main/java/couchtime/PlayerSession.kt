@@ -8,10 +8,11 @@ import android.view.Surface
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
-import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
-import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
 import couchtime.core.tvcontract.domain.model.TvContractDisplayNumber
-import couchtime.feature.sync.ChannelsDatabaseSource
+import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
+import couchtime.feature.channel.domain.model.Channel
+import couchtime.feature.channel.domain.model.toChannelDisplayNumber
+import couchtime.feature.channel.domain.source.LocalChannelsSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -29,21 +30,21 @@ import javax.inject.Inject
 
 class PlayerSession @Inject constructor(
     context: Context,
-    private val channelsDatabaseSource: ChannelsDatabaseSource,
+    private val localChannelsSource: LocalChannelsSource,
     private val tvContractChannelsSource: TvContractChannelsSource,
 ) : Session(context) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    private val channels: Store<TvContractDisplayNumber, GoogleSheetChannel> =
+    private val channels: Store<TvContractDisplayNumber, Channel> =
         StoreBuilder
             .from(
                 fetcher = Fetcher.of { displayNumber: TvContractDisplayNumber ->
-                    channelsDatabaseSource.getChannel(displayNumber.value)
+                    localChannelsSource.getChannel(displayNumber.value.toChannelDisplayNumber())
                 },
             )
             .cachePolicy(
-                MemoryPolicy.builder<TvContractDisplayNumber, GoogleSheetChannel>()
+                MemoryPolicy.builder<TvContractDisplayNumber, Channel>()
                     .build()
             )
             .scope(coroutineScope)

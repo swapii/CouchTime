@@ -8,11 +8,11 @@ import android.database.Cursor
 import android.media.tv.TvContract
 import android.net.Uri
 import couchtime.core.coroutines.chunked
+import couchtime.core.tvcontract.domain.model.TvContractChannel
 import couchtime.core.tvcontract.domain.model.TvContractChannelAddress
-import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
-import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
 import couchtime.core.tvcontract.domain.model.TvContractDisplayNumber
 import couchtime.core.tvcontract.domain.model.toTvContractDisplayNumber
+import couchtime.core.tvcontract.domain.source.TvContractChannelsSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,14 +45,14 @@ internal class TvContractChannelsSourceImpl @Inject constructor(
         }
     }
 
-    override suspend fun save(inputId: String, channels: Flow<GoogleSheetChannel>): Int {
+    override suspend fun save(channels: Flow<TvContractChannel>): Int {
         Timber.d("Save channels")
         return resolveContent {
             var newElementsCount = 0
             channels
                 .map {
                     ContentProviderOperation.newInsert(TvContract.Channels.CONTENT_URI)
-                        .withValues(it.toContentValues(inputId))
+                        .withValues(it.toContentValues())
                         .build()
                 }
                 .chunked(100)
@@ -118,12 +118,16 @@ private fun ContentResolver.count(uri: Uri): Int =
             }
         }
 
-private fun GoogleSheetChannel.toContentValues(inputId: String): ContentValues =
+private fun TvContractChannel.toContentValues(): ContentValues =
     ContentValues()
         .apply {
             put(TvContract.Channels.COLUMN_INPUT_ID, inputId)
-            put(TvContract.Channels.COLUMN_TYPE, TvContract.Channels.TYPE_OTHER)
-            put(TvContract.Channels.COLUMN_SERVICE_TYPE, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)
-            put(TvContract.Channels.COLUMN_DISPLAY_NUMBER, displayNumber.value)
-            put(TvContract.Channels.COLUMN_DISPLAY_NAME, name)
+            put(TvContract.Channels.COLUMN_TYPE, type)
+            put(TvContract.Channels.COLUMN_SERVICE_TYPE, serviceType)
+            displayNumber?.let {
+                put(TvContract.Channels.COLUMN_DISPLAY_NUMBER, it.value)
+            }
+            name?.let {
+                put(TvContract.Channels.COLUMN_DISPLAY_NAME, it)
+            }
         }

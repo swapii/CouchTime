@@ -3,23 +3,24 @@ package couchtime.feature.sync
 import couchtime.core.coroutines.chunked
 import couchtime.core.database.entity.ChannelDao
 import couchtime.core.database.entity.ChannelDatabaseEntity
-import couchtime.core.googlesheet.domain.model.GoogleSheetChannel
-import couchtime.core.googlesheet.domain.model.GoogleSheetChannelDisplayNumber
+import couchtime.feature.channel.domain.model.Channel
+import couchtime.feature.channel.domain.model.ChannelDisplayNumber
+import couchtime.feature.channel.domain.source.LocalChannelsSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-class ChannelsDatabaseSource @Inject constructor(
+class LocalChannelsSourceImpl @Inject constructor(
     private val channelDao: ChannelDao,
-) {
+) : LocalChannelsSource {
 
-    suspend fun getChannel(channelNumber: String): GoogleSheetChannel =
+    override suspend fun getChannel(channelNumber: ChannelDisplayNumber): Channel =
         channelDao
-            .getChannel(channelNumber)
+            .getChannel(channelNumber.value)
             .toDomainModel()
 
-    fun readAll(): Flow<GoogleSheetChannel> =
+    override fun readAll(): Flow<Channel> =
         flow {
             channelDao.getAll()
                 .forEach {
@@ -28,10 +29,10 @@ class ChannelsDatabaseSource @Inject constructor(
         }
             .map(ChannelDatabaseEntity::toDomainModel)
 
-    suspend fun save(channels: Flow<GoogleSheetChannel>): Int {
+    override suspend fun save(channels: Flow<Channel>): Int {
         var count = 0
         channels
-            .map(GoogleSheetChannel::toDatabaseEntity)
+            .map(Channel::toDatabaseEntity)
             .chunked(100)
             .collect { entities ->
                 channelDao.save(entities)
@@ -40,13 +41,13 @@ class ChannelsDatabaseSource @Inject constructor(
         return count
     }
 
-    suspend fun deleteAll() {
+    override suspend fun deleteAll() {
         channelDao.deleteAll()
     }
 
 }
 
-private fun GoogleSheetChannel.toDatabaseEntity() =
+private fun Channel.toDatabaseEntity() =
     ChannelDatabaseEntity(
         number = displayNumber.value,
         name = name,
@@ -54,8 +55,8 @@ private fun GoogleSheetChannel.toDatabaseEntity() =
     )
 
 private fun ChannelDatabaseEntity.toDomainModel() =
-    GoogleSheetChannel(
-        displayNumber = GoogleSheetChannelDisplayNumber(number),
+    Channel(
+        displayNumber = ChannelDisplayNumber(number),
         name = name,
         address = address,
     )
