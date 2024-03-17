@@ -24,6 +24,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.lifecycleScope
 import couchtime.feature.sync.SyncChannels
+import couchtime.sync.SyncElectronicProgramGuide
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -38,6 +39,10 @@ internal class SetupActivity : ComponentActivity() {
     @Inject
     @Suppress("ProtectedInFinal")
     protected lateinit var syncChannels: SyncChannels
+
+    @Inject
+    @Suppress("ProtectedInFinal")
+    protected lateinit var syncElectronicProgramGuide: SyncElectronicProgramGuide
 
     @Inject
     @Suppress("ProtectedInFinal")
@@ -82,6 +87,17 @@ internal class SetupActivity : ComponentActivity() {
                     },
                 ) {
                     Text(text = "Sync channels")
+                }
+
+                Button(
+                    onClick = {
+                        Timber.i("Sync EPG button clicked")
+                        lifecycleScope.launch {
+                            syncElectronicProgramGuide()
+                        }
+                    },
+                ) {
+                    Text(text = "Sync EPG")
                 }
 
                 Button(
