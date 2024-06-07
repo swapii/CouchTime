@@ -19,7 +19,7 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
 
                 group("compose") {
                     version("compiler", "1.5.14")
-                    library("bom", "androidx.compose:compose-bom:2024.02.00")
+                    library("bom", "androidx.compose:compose-bom:2024.05.00")
                     library("material3", "androidx.compose.material3:material3")
                 }
 
