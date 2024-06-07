@@ -18,7 +18,7 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
                 library("activity.compose", "androidx.activity:activity-compose:1.8.2")
 
                 group("compose") {
-                    version("compiler", "1.5.9")
+                    version("compiler", "1.5.14")
                     library("bom", "androidx.compose:compose-bom:2024.02.00")
                     library("material3", "androidx.compose.material3:material3")
                 }
@@ -49,11 +49,11 @@ fun MutableVersionCatalogContainer.commonVersionCatalog(name: String) {
             library("hilt.android", "com.google.dagger:hilt-android") { version(version) }
         }
 
-        group("kotlin", "1.9.22") {
+        group("kotlin", "1.9.24") {
             plugin("jvm", "org.jetbrains.kotlin.jvm").version(version)
             plugin("android", "org.jetbrains.kotlin.android").version(version)
             plugin("serialization", "org.jetbrains.kotlin.plugin.serialization").version(version)
-            plugin("ksp", "com.google.devtools.ksp").version("$version-1.0.17")
+            plugin("ksp", "com.google.devtools.ksp").version("$version-1.0.20")
             group("x") {
                 group("serialization", "1.6.3") {
                     library("json", "org.jetbrains.kotlinx:kotlinx-serialization-json") { version(version) }
